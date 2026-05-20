@@ -234,11 +234,17 @@ export function useSupabaseMutation() {
       setError(null)
       const { data: result, error: err } = await supabase
         .from(table)
-        .update(data)
+        .update({ ...data, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
 
       if (err) throw err
+      if (!result?.length) {
+        const msg =
+          'No rows updated. Log out, log in again as admin, or run database/results_rls_fix.sql in Supabase.'
+        setError(msg)
+        return { success: false, error: msg }
+      }
       return { success: true, data: result }
     } catch (err) {
       console.error(`Error updating ${table}:`, err)
@@ -374,6 +380,19 @@ export function useAdminAuth() {
       }
 
       console.log('✅ User UID:', profileData?.uid || 'N/A')
+
+      // Legacy RLS policies check public.users.role = 'admin'
+      const { error: usersErr } = await supabase.from('users').upsert(
+        {
+          id: data.user.id,
+          email: data.user.email,
+          role: 'admin',
+        },
+        { onConflict: 'id' }
+      )
+      if (usersErr) {
+        console.warn('⚠️ Could not sync users row (RLS may block until SQL fix):', usersErr.message)
+      }
 
       return {
         success: true,

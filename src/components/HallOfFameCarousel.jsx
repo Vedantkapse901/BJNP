@@ -85,7 +85,10 @@ export function HallOfFameCarousel({ results = [], alwaysRoll = false }) {
       className="flex w-max gap-6 px-4 py-4 will-change-transform"
     >
       {trackItems.map((result, index) => (
-        <HallOfFameCard key={`${result.id}-${index}`} result={result} />
+        <HallOfFameCard
+          key={`${result.id}-${result.updated_at || ''}-${result.name}-${index}`}
+          result={result}
+        />
       ))}
     </div>
   );

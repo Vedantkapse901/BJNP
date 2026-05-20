@@ -551,6 +551,12 @@ export function AdminPanel() {
             onUpdate={async (id, data) => {
               const result = await update('results', id, data);
               if (!result.success) throw new Error(result.error || 'Failed to update student');
+              const saved = result.data?.[0];
+              setDraftResults((prev) =>
+                prev.map((row) =>
+                  String(row.id) === String(id) ? { ...row, ...data, ...saved } : row
+                )
+              );
               setSaveStatus('Student updated!');
               await refetchResults();
             }}
